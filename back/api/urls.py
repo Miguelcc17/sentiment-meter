@@ -1,9 +1,9 @@
 from rest_framework import routers
-from .api import UsuariosViewSet, DatosViewSet
+from .api import UserViewSet, DataViewSet
 
 router = routers.DefaultRouter()
 
-router.register('api/user', UsuariosViewSet, 'user')
-router.register('api/datos', DatosViewSet, 'datos')
+router.register('api/user', UserViewSet, 'user')
+router.register('api/data', DataViewSet, 'data')
 
 urlpatterns = router.urls

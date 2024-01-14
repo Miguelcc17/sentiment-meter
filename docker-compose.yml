@@ -1,0 +1,46 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:14.3
+    environment:
+      - POSTGRES_USER=root
+      - POSTGRES_PASSWORD=my_secret_password
+      - POSTGRES_DB=my_database
+    ports:
+      - "5432s:5432"
+    networks:
+      - backend
+  node:
+    image: node:18-alpine
+    environment:
+      - NODE_ENV=production
+      - DATABASE_HOST=db
+      - DATABASE_PORT=5432s
+      - DATABASE_USER=root
+      - DATABASE_PASSWORD=my_secret_password
+      - DATABASE_NAME=my_database
+    ports:
+      - "3000:3000"
+    networks:
+      - backend
+    volumes:
+      - /my-data:/app/data
+  python:
+    image: python:3.10-alpine
+    environment:
+      - PYTHONUNBUFFERED=1
+      - DATABASE_HOST=db
+      - DATABASE_PORT=5432s
+      - DATABASE_USER=root
+      - DATABASE_PASSWORD=my_secret_password
+      - DATABASE_NAME=my_database
+    command: python app.py
+    networks:
+      - backend
+    volumes:
+      - /my-data:/app/data
+
+networks:
+  backend:
+    driver: bridge
