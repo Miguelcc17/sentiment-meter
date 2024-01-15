@@ -20,7 +20,7 @@ def comment_category_emotion(text: str = None, both: int = 0):
     - If both == 1: Sentiment analysis result.
     - If both == 2: Emotion analysis result.
     """
-
+    text = f"""{text}"""
     # Check input types
     if type(text) != str or type(both) != int:
         raise ValueError('Invalid input types')  # Raise an error with an informative message
@@ -32,6 +32,9 @@ def comment_category_emotion(text: str = None, both: int = 0):
     # Retrieve Hugging Face API token from environment variables
     KEY_FACE = os.environ.get('TOKEN_HUGGINGFACE')
 
+    if KEY_FACE == None or KEY_FACE == '':
+        raise ValueError('Need token')
+    
     def comment_category(text: str = None):
         """
         Analyzes sentiment of the given text using Hugging Face sentiment analysis API.

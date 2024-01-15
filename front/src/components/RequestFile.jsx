@@ -1,11 +1,13 @@
 import React, { Component} from 'react'
 import axios from 'axios';
+import Prueba from './Prueba';
 
 export default class RequestFile extends Component {
     constructor(props) {
         super(props);
         this.state = {
             file: null,
+            result: null,
         };
     }
     handleFileChange = (event) => {
@@ -22,7 +24,8 @@ export default class RequestFile extends Component {
                     'Content-Type': 'multipart/form-data',
                 },
             });
-            console.log(response.data);
+            this.setState({ result: response.data.result })
+            // console.log(response.data.result )
         } catch (error) {
             console.error('Error al cargar el archivo:', error);
         }
@@ -43,7 +46,16 @@ export default class RequestFile extends Component {
                         </div>
                     </div>
                 </div>
+                <hr />
                 </div>
+                <div className='row'>
+                    {this.state.result && this.state.result.map((item, index) => (
+                        <div key={index} className='col-sm-3'>
+                            <Prueba text={item[0].text} emotions={item[1]} />
+                        </div>
+                    ))}
+                </div>
+
             </div>
         )
     }

@@ -11,9 +11,6 @@ class UserSerializer(serializers.ModelSerializer):
         SQL_INJECTION_REGEX_EMAIL = re.compile(r'[\'\"]?([\w\._%+-]+@[\w\._%+-]+)[\'\"]?')
         SQL_INJECTION_REGEX_PASSWORD = re.compile(r'^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[@#$%^&*()_+|~-]).{8,}$')
 
-        name = data.get('name', '')
-        email = data.get('email', '')
-        password = data.get('password', '')
 
         for field in ['id', 'created_at']:
             if field in data and data[field] is not None:

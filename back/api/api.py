@@ -14,6 +14,12 @@ import re
 import csv
 import pandas as pd
 
+import requests
+import time  # Import the time module for adding a delay
+from dotenv import load_dotenv
+load_dotenv()
+import os
+
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     permission_classes = [permissions.AllowAny]
@@ -63,20 +69,118 @@ class DataViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.AllowAny]
     serializer_class = DataSerializer
 
+
+    def comment_category_emotion(self, text: str = None, both: int = 0):
+        """
+        Analyzes sentiment and emotion of the given text using Hugging Face APIs.
+
+        Parameters:
+        - text (str): The input text for analysis.
+        - both (int): Determines the type of analysis to perform.
+            - 0: Analyze both sentiment and emotion.
+            - 1: Analyze only sentiment.
+            - 2: Analyze only emotion.
+
+        Returns:
+        - If both == 0: List containing sentiment and emotion analysis results.
+        - If both == 1: Sentiment analysis result.
+        - If both == 2: Emotion analysis result.
+        """
+        text = f"""{text}"""
+        # Check input types
+        if type(text) != str or type(both) != int:
+            raise ValueError('Invalid input types')  # Raise an error with an informative message
+
+        # Check the validity of the 'both' parameter
+        if both not in [0, 1, 2]:
+            raise ValueError('Invalid value for "both" parameter')  # Raise an error with an informative message
+
+        # Retrieve Hugging Face API token from environment variables
+        KEY_FACE = os.environ.get('TOKEN_HUGGINGFACE')
+
+        def comment_category(text: str = None):
+            """
+            Analyzes sentiment of the given text using Hugging Face sentiment analysis API.
+
+            Parameters:
+            - text (str): The input text for sentiment analysis.
+
+            Returns:
+            - Sentiment analysis result in JSON format.
+            """
+            API_URL = "https://api-inference.huggingface.co/models/finiteautomata/beto-sentiment-analysis"
+            headers = {"Authorization": f"Bearer {KEY_FACE}"}
+
+            # Function to make a request to the API with retry logic
+            def query_with_retry(payload, max_retries=3, delay_seconds=2):
+                for _ in range(max_retries):
+                    response = requests.post(API_URL, headers=headers, json=payload)
+                    if response.status_code == 200:
+                        return response.json()
+                    elif response.status_code == 503:  # HTTP 503 Service Unavailable (model loading)
+                        print("Model is currently loading. Retrying in {} seconds...".format(delay_seconds))
+                        time.sleep(delay_seconds)
+                    else:
+                        print(f"Unexpected response: {response.status_code}. Retrying in {delay_seconds} seconds...")
+                        time.sleep(delay_seconds)
+                print("Max retries reached. Unable to get a valid response.")
+                return {"error": "Max retries reached. Unable to get a valid response."}
+
+            return query_with_retry({"inputs": text})
+
+        # Function to analyze emotion using Hugging Face API
+        def comment_emotion(text: str = None):
+            """
+            Analyzes emotion of the given text using Hugging Face emotion analysis API.
+
+            Parameters:
+            - text (str): The input text for emotion analysis.
+
+            Returns:
+            - Emotion analysis result in JSON format.
+            """
+            API_URL = "https://api-inference.huggingface.co/models/finiteautomata/beto-emotion-analysis"
+            headers = {"Authorization": f"Bearer {KEY_FACE}"}
+
+            # Function to make a request to the API with retry logic
+            def query_with_retry(payload, max_retries=3, delay_seconds=2):
+                for _ in range(max_retries):
+                    response = requests.post(API_URL, headers=headers, json=payload)
+                    if response.status_code == 200:
+                        return response.json()
+                    elif response.status_code == 503:  # HTTP 503 Service Unavailable (model loading)
+                        print("Model is currently loading. Retrying in {} seconds...".format(delay_seconds))
+                        time.sleep(delay_seconds)
+                    else:
+                        print(f"Unexpected response: {response.status_code}. Retrying in {delay_seconds} seconds...")
+                        time.sleep(delay_seconds)
+                print("Max retries reached. Unable to get a valid response.")
+                return {"error": "Max retries reached. Unable to get a valid response."}
+
+            return query_with_retry({"inputs": text})
+
+        if both == 0:
+            result_category = comment_category(text)
+            result_emotion = comment_emotion(text)
+            return [result_category[0][0], result_emotion[0][0]]
+        elif both == 1:
+            return comment_category(text)
+        elif both == 2:
+            return comment_emotion(text)
+    
+
+
     def create(self, request, *args, **kwargs):
         csv_file = request.data.get('csv_file')
-        print(csv_file)
         if csv_file:
             # Lee el contenido del archivo CSV utilizando pandas
             try:
-                pass
                 df = pd.read_csv(csv_file)
                 # Itera sobre los registros y envíalos al frontend de manera asíncrona
-                print('hola')
-                for index, row in df.iterrows():
-                    print(row)
-                    data_row = row.to_dict()
-                return Response({'message': 'Datos enviados al frontend'}, status=200)    
+                finish_resul = []
+                for row in df.iloc[0:].values:
+                    finish_resul.append([{'text': str(row[0])}, self.comment_category_emotion(row)])
+                return Response({'result': finish_resul}, status=200)    
                     # Aquí puedes enviar data_row al frontend de alguna manera (puede ser una llamada a una API, WebSockets, etc.)
             except pd.errors.EmptyDataError:
                 return Response({'error': 'El archivo CSV está vacío'}, status=400)
