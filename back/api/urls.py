@@ -6,4 +6,5 @@ router = routers.DefaultRouter()
 router.register('api/user', UserViewSet, 'user')
 router.register('api/data', DataViewSet, 'data')
 
+
 urlpatterns = router.urls

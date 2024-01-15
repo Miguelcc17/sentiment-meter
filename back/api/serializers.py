@@ -66,4 +66,4 @@ class UserSerializer(serializers.ModelSerializer):
 class DataSerializer(serializers.ModelSerializer):
     class Meta:
         model = Data
-        fields = ('id', 'texto', 'sentimiento', 'emoción', 'usuario')
+        fields = ('id', 'text', 'sentiment', 'emotion', 'user', 'status')

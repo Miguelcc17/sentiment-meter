@@ -1,6 +1,8 @@
 from .models import User, Data
 from .serializers import UserSerializer, DataSerializer
 
+from rest_framework.parsers import MultiPartParser
+
 from rest_framework import viewsets, permissions, status
 from rest_framework.response import Response
 from django.http import Http404
@@ -9,6 +11,8 @@ from django.contrib.auth.hashers import check_password
 # from django.contrib.auth.models import User
 
 import re
+import csv
+import pandas as pd
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
@@ -58,3 +62,25 @@ class DataViewSet(viewsets.ModelViewSet):
     queryset = Data.objects.all()
     permission_classes = [permissions.AllowAny]
     serializer_class = DataSerializer
+
+    def create(self, request, *args, **kwargs):
+        csv_file = request.data.get('csv_file')
+        print(csv_file)
+        if csv_file:
+            # Lee el contenido del archivo CSV utilizando pandas
+            try:
+                pass
+                df = pd.read_csv(csv_file)
+                # Itera sobre los registros y envíalos al frontend de manera asíncrona
+                print('hola')
+                for index, row in df.iterrows():
+                    print(row)
+                    data_row = row.to_dict()
+                return Response({'message': 'Datos enviados al frontend'}, status=200)    
+                    # Aquí puedes enviar data_row al frontend de alguna manera (puede ser una llamada a una API, WebSockets, etc.)
+            except pd.errors.EmptyDataError:
+                return Response({'error': 'El archivo CSV está vacío'}, status=400)
+            except pd.errors.ParserError:
+                return Response({'error': 'Error al procesar el archivo CSV'}, status=400)
+        else:
+            return Response({'error': 'No se proporcionó un archivo CSV'}, status=400)
